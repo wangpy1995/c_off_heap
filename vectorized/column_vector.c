@@ -14,6 +14,7 @@
 static ColumnVector *allocateInt8Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_8;
+    vector->capacity = capacity;
     vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
@@ -26,6 +27,7 @@ static ColumnVector *allocateInt8Column(long capacity) {
 static ColumnVector *allocateInt16Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_16;
+    vector->capacity = capacity;
     vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
@@ -38,6 +40,7 @@ static ColumnVector *allocateInt16Column(long capacity) {
 static ColumnVector *allocateInt32Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_32;
+    vector->capacity = capacity;
     vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
@@ -50,6 +53,7 @@ static ColumnVector *allocateInt32Column(long capacity) {
 static ColumnVector *allocateInt64Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_64;
+    vector->capacity = capacity;
     vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
@@ -62,6 +66,7 @@ static ColumnVector *allocateInt64Column(long capacity) {
 static ColumnVector *allocateFloatColumn(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = FLOAT;
+    vector->capacity = capacity;
     vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
@@ -74,6 +79,7 @@ static ColumnVector *allocateFloatColumn(long capacity) {
 static ColumnVector *allocateDoubleColumn(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = DOUBLE;
+    vector->capacity = capacity;
     vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
@@ -86,6 +92,7 @@ static ColumnVector *allocateDoubleColumn(long capacity) {
 static ColumnVector *allocateBinaryColumn(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = BINARY;
+    vector->capacity = capacity;
     vector->childColumns = allocateInt8Column(capacity * DEFAULT_ARRAY_LENGTH);
     vector->childColumns->lengthData = malloc(sizeof(int) * capacity);
     vector->childColumns->offsetData = malloc(sizeof(int) * capacity);
@@ -143,23 +150,23 @@ static inline void reallocate(void **data, size_t oldCapacity, size_t newCapacit
 }
 
 static inline void putBinary(ColumnVector *vector, long rowId, void *value, int length) {
-    ColumnVector des = vector->childColumns[0];
-    long requiredCapacity = des.elementsAppended + length;
+    ColumnVector *des = vector->childColumns;
+    long requiredCapacity = des->elementsAppended + length;
     long newCapacity = requiredCapacity * 2;
-    long oldCapacity = des.capacity;
+    long oldCapacity = des->capacity;
     //内存扩容
     if (requiredCapacity > oldCapacity) {
         size_t oldBitLen = ((sizeof(char) * oldCapacity) >> 3) + 1;
         size_t newBitLen = ((sizeof(char) * newCapacity) >> 3) + 1;
-        reallocate((void **) &(des.nulls), oldBitLen, newBitLen);
-        memset(des.nulls, 0, newBitLen - oldBitLen);
-        reallocate((void **) &(des.lengthData), sizeof(int) * oldCapacity, sizeof(int) * newCapacity);
-        reallocate((void **) &(des.offsetData), sizeof(int) * oldCapacity, sizeof(int) * newCapacity);
+        reallocate((void **) &(des->nulls), oldBitLen, newBitLen);
+        memset(des->nulls, 0, newBitLen - oldBitLen);
+        reallocate((void **) &(des->lengthData), sizeof(int) * oldCapacity, sizeof(int) * newCapacity);
+        reallocate((void **) &(des->offsetData), sizeof(int) * oldCapacity, sizeof(int) * newCapacity);
     }
-    des.capacity = newCapacity;
-    des.lengthData[rowId] = length;
-    memcpy(des.offsetData + des.elementsAppended, value, sizeof(char) * length);
-    des.elementsAppended += length;
+    des->capacity = newCapacity;
+    des->lengthData[rowId] = length;
+    memcpy(des->offsetData + des->elementsAppended, value, sizeof(char) * length);
+    des->elementsAppended += length;
 }
 
 
@@ -168,37 +175,37 @@ static inline void putBinary(ColumnVector *vector, long rowId, void *value, int 
 ////////////////////////////////////
 static inline void putInt8s(ColumnVector *vector, long rowId, void *value, int nums) {
     memcpy(vector->data + rowId, value, sizeof(char) * nums);
-    (vector->elementsAppended) += nums;
+    vector->elementsAppended += nums;
 }
 
 static inline void putInt16s(ColumnVector *vector, long rowId, void *value, int nums) {
     short *des = (short *) (vector->data);
     memcpy(des + rowId, value, sizeof(short) * nums);
-    (vector->elementsAppended) += nums;
+    vector->elementsAppended += nums;
 }
 
 static inline void putInt32s(ColumnVector *vector, long rowId, void *value, int nums) {
     int *des = (int *) (vector->data);
     memcpy(des + rowId, value, sizeof(int) * nums);
-    (vector->elementsAppended) += nums;
+    vector->elementsAppended += nums;
 }
 
 static inline void putInt64s(ColumnVector *vector, long rowId, void *value, int nums) {
     long *des = (long *) (vector->data);
     memcpy(des + rowId, value, sizeof(long) * nums);
-    (vector->elementsAppended) += nums;
+    vector->elementsAppended += nums;
 }
 
 static inline void putFloats(ColumnVector *vector, long rowId, void *value, int nums) {
     float *des = (float *) (vector->data);
     memcpy(des + rowId, value, sizeof(float) * nums);
-    (vector->elementsAppended) += nums;
+    vector->elementsAppended += nums;
 }
 
 static inline void putDoubles(ColumnVector *vector, long rowId, void *value, int nums) {
     double *des = (double *) (vector->data);
     memcpy(des + rowId, value, sizeof(double) * nums);
-    (vector->elementsAppended) += nums;
+    vector->elementsAppended += nums;
 }
 
 typedef ColumnVector *(*ColumnAllocator)(long);

@@ -18,4 +18,11 @@ int main(void) {
 
     batchUpdate(vector, 0, test, 50);
     printf("%lf\n", *(((double *) (vector->data)) + 49));
+
+    char t[][6] = {"xxxxx", "yyyyy", "zzzz"};
+    vector = allocateColumn(3, BINARY);
+    batchUpdate(vector, 0, t[0], 5);
+    batchUpdate(vector, 1, t[1], 5);
+    batchUpdate(vector, 2, t[2], 4);
+    printf("%s\n", vector->childColumns->offsetData);
 }
