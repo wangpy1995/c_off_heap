@@ -70,7 +70,7 @@ inline int avx128_cmpeq(const char *src, const char *des, int cmpLen) {
 }
 
 #ifdef __cplusplus
-"}"
+}
 #endif
 
 #endif //JNI_TEST_INLINE_AVX_SUM_H

@@ -7,6 +7,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum _DataType {
     INT_8 = 0,
     INT_16,
@@ -60,5 +64,7 @@ void updateValue(ColumnVector *vector, long rowId, void *value);
  * @param nums
  */
 void batchUpdate(ColumnVector *vector, long rowId, void *value, int nums);
-
+#ifdef __cplusplus
+}
+#endif
 #endif //C_OFF_HEAP_COLUMN_VECTOR_H
