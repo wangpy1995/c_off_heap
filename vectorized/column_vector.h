@@ -23,13 +23,13 @@ typedef struct _ColumnVector {
 
     long capacity;////元素个数
 
-    long elementsAppended;////已存在元素个数
+    int elementsAppended;////已存在元素个数
 
     char *nulls;////为null的元素位置   bit
 
     int *lengthData;////数组模式使用  记录当前长度
 
-    char *offsetData;////数组模式使用  记录当前数组值
+    int *offsetData;////数组模式使用  记录当前数组值
 
     struct _ColumnVector *childColumns;////下级列
 

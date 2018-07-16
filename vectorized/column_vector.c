@@ -96,6 +96,7 @@ static ColumnVector *allocateBinaryColumn(long capacity) {
     vector->childColumns = allocateInt8Column(capacity * DEFAULT_ARRAY_LENGTH);
     vector->childColumns->lengthData = malloc(sizeof(int) * capacity);
     vector->childColumns->offsetData = malloc(sizeof(int) * capacity);
+    vector->childColumns->data = malloc(sizeof(char) * capacity * DEFAULT_ARRAY_LENGTH);
     vector->elementsAppended = 0;
     vector->nulls = NULL;
     vector->data = NULL;
@@ -144,29 +145,39 @@ static inline void putDouble(ColumnVector *vector, long rowId, void *value) {
 /////////////////////////////////////////////////////////////////////////
 static inline void reallocate(void **data, size_t oldCapacity, size_t newCapacity) {
     void *newData = malloc(newCapacity);
-    memcpy(newData, data, oldCapacity);
+    memcpy(newData, *data, oldCapacity);
     free(*data);
     *data = newData;
 }
 
 static inline void putBinary(ColumnVector *vector, long rowId, void *value, int length) {
     ColumnVector *des = vector->childColumns;
-    long requiredCapacity = des->elementsAppended + length;
-    long newCapacity = requiredCapacity * 2;
-    long oldCapacity = des->capacity;
+    const int oldOffset = des->elementsAppended;
+    const int requiredCapacity = oldOffset + length;
+    const long oldCapacity = des->capacity;
     //内存扩容
     if (requiredCapacity > oldCapacity) {
-        size_t oldBitLen = ((sizeof(char) * oldCapacity) >> 3) + 1;
-        size_t newBitLen = ((sizeof(char) * newCapacity) >> 3) + 1;
+        const long newCapacity = requiredCapacity * 2;
+        //nulls 扩容
+        const size_t oldBitLen = ((sizeof(char) * oldCapacity) >> 3) + 1;
+        const size_t newBitLen = ((sizeof(char) * newCapacity) >> 3) + 1;
         reallocate((void **) &(des->nulls), oldBitLen, newBitLen);
-        memset(des->nulls, 0, newBitLen - oldBitLen);
+        memset(des->nulls + oldBitLen, 0, newBitLen - oldBitLen);
+        //data
         reallocate((void **) &(des->lengthData), sizeof(int) * oldCapacity, sizeof(int) * newCapacity);
         reallocate((void **) &(des->offsetData), sizeof(int) * oldCapacity, sizeof(int) * newCapacity);
+        reallocate((void **) &(des->data), sizeof(char) * oldCapacity, sizeof(char) * newCapacity);
+        //更新容量
+        des->capacity = newCapacity;
     }
-    des->capacity = newCapacity;
     des->lengthData[rowId] = length;
-    memcpy(des->offsetData + des->elementsAppended, value, sizeof(char) * length);
-    des->elementsAppended += length;
+    des->offsetData[rowId] = oldOffset;
+    if (length == 0) {
+        setbit(des->nulls, rowId);
+    } else {
+        memcpy(des->data + oldOffset, value, sizeof(char) * length);
+    }
+    des->elementsAppended = requiredCapacity;
 }
 
 
@@ -208,6 +219,9 @@ static inline void putDoubles(ColumnVector *vector, long rowId, void *value, int
     vector->elementsAppended += nums;
 }
 
+//////////////////////////////////
+////
+//////////////////////////////////
 typedef ColumnVector *(*ColumnAllocator)(long);
 
 typedef void (*UpdateColumn)(ColumnVector *, long, void *);
