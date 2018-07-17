@@ -3,7 +3,7 @@
 //
 
 #include "column_vector.h"
-#include <stdio.h>
+#include <cstdio>
 #include <sys/param.h>
 #include <cstring>
 #include <set>
@@ -11,27 +11,41 @@
 #include <row/row.h>
 #include <vector>
 
-void testRow(void) {
+void testRow() {
 
     int a[] = {1, 2, 3, 4, 5, 6, 7, 8};
     char b[] = {9, 10, 11, 14, 15, 16, 17, 18};
     float c[] = {50.0, 51.0, 53, 54, 55, 56, 57, 58};
     char d[][3] = {"aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh"};
 
-    void *row[4] = {};
+    std::vector<Row *> vector;
+    int i;
 
-    row[0] = a;
-    row[1] = b;
-    row[2] = c;
-    row[3] = d;
+    for (i = 0; i < 8; ++i) {
+        Object obj[] = {a + i, b + i, c + i, d + i};
+        Row row(obj);
+        vector.insert(vector.end(), &row);
+    }
 
-    printf("%d\t", *(int *) row[0]);
-    printf("%d\t", *(char *) row[1]);
-    printf("%f\t", *(float *) row[2]);
-    printf("%s\t", (char *) row[3]);
+    int *ra;
+    char *rb;
+    float *rc;
+    char **rd;
+    auto it = vector.begin();
+    while (it != vector.end()) {
+        auto &item = *(it.base());
+
+        ra = item->getAs<int>(0);
+        rb = item->getAs<char>(1);
+        rc = item->getAs<float>(2);
+        rd = item->getAs<char *>(3);
+        printf("a: %d\tb: %d\tc: %f\td: %s\t\n", *ra, *rb, *rc, rd);
+        ++it;
+    }
+    printf("\n");
 }
 
-void testInSetFilter(void) {
+void testInSetFilter() {
     double test[70];
     int i;
     for (i = 0; i < 70; ++i) {
@@ -54,13 +68,13 @@ void testInSetFilter(void) {
 
     for (i = 0; i < 50; ++i) {
         if (baseFilters[DOUBLE][IN_SET](vector, i, &inSetFilter)) {
-            double *src = (double *) vector->data;
+            auto *src = (double *) vector->data;
             printf("%lf\t", src[i]);
         };
     }
 }
 
-void testBinary(void) {
+void testBinary() {
     int i;
 
     ColumnVector *vector = allocateColumn(3, BINARY);
@@ -87,5 +101,7 @@ int main() {
     testRow();
 
     testBinary();
+
+    testInSetFilter();
 
 }
