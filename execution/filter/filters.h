@@ -9,11 +9,9 @@
 #include "string.h"
 #include "column_vector.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 typedef struct _FILTER {
     const int size;
     const void *value;
@@ -34,11 +32,9 @@ enum _FILTER_TYPE {
 
 typedef int (*filter)(ColumnVector *, long, FILTER *);
 
-extern const filter binaryFilters[];
-extern const filter baseFilters[][6];
+extern const filter baseFilters[][10];
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif //C_OFF_HEAP_FILTERS_H

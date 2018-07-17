@@ -4,12 +4,13 @@
 
 
 #include "filters.h"
+#include "_SIMILAR.h"
 
 #define HIK_VCA_LIB_S_OK                     1           //成功
 #define HIKFR_LIB_NOT_SUPPORT_VERSION      0x80007004    // 非算法库支持的比对版本
 
 #define ALIGNTO(n)      __attribute__((aligned(n))) //内存对齐
-#define TAG_LEN         16
+
 #define SIG_LUT_LEN         800
 #define FEAT_DIM        512
 #define SIG_START_VAL      (-10)
@@ -195,17 +196,13 @@ static const float FR_CONST_SIGMOID_LUT[SIG_LUT_LEN + 1] = {
 
 ALIGNTO(32) static const char tag[TAG_LEN] = "HIKDFR32105TX";//{'H', 'I', 'K', 'D', 'F', 'R', '3', '2', 'X', 0, 0, 0, 0, 0, 0, 0};  //版本号
 
-#define MODEL_LEN 512
-#define AVX_TRUE 0xffffffffffffffff
+#define AVX_TRUE 1
 
-float compare(ColumnVector *vector, long rowId, FILTER *filter) {
-
-    const char *src = vector->childColumns->data + rowId * (MODEL_LEN + TAG_LEN);
-    const char *dst = filter->value;
+float compare(const char *src, const char *dst) {
 
 #ifdef __AVX2__
-    __m128i src_check = _mm_cmpeq_epi8(*(__m128i *) src, *(__m128i *) tag);
-    __m128i dst_check = _mm_cmpeq_epi8(*(__m128i *) dst, *(__m128i *) tag);
+    __m128i src_check = _mm_cmpeq_epi64(*(__m128i *) src, *(__m128i *) tag);
+    __m128i dst_check = _mm_cmpeq_epi64(*(__m128i *) dst, *(__m128i *) tag);
     int64_t *check_src = (int64_t *) &src_check;
     int64_t *check_dst = (int64_t *) &dst_check;
 
@@ -254,7 +251,7 @@ float compare(ColumnVector *vector, long rowId, FILTER *filter) {
         src += TAG_LEN;
         dst += TAG_LEN;
         int i;
-        int s=0;
+        int s = 0;
         for (i = 0; i < FEAT_DIM; ++i) {
             s += src[i] * dst[i];
         }

@@ -19,5 +19,4 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 add_library(c_off_heap SHARED
         execution/vectorized/column_vector.c
         execution/filter/_SIMILAR.c
-        execution/filter/base_filters.cc
-        execution/filter/binary_filters.cc)
+        execution/filter/filters.cc)
