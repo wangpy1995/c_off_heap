@@ -20,25 +20,24 @@ void testRow() {
 
     std::vector<Row *> vector;
     int i;
-
     for (i = 0; i < 8; ++i) {
         Object obj[] = {a + i, b + i, c + i, d + i};
         Row row(obj);
         vector.insert(vector.end(), &row);
     }
 
-    int *ra;
-    char *rb;
-    float *rc;
-    char **rd;
+    const int *ra;
+    const char *rb;
+    const float *rc;
+    const char **rd;
     auto it = vector.begin();
     while (it != vector.end()) {
-        auto &item = *(it.base());
+        const auto &item = *(it.base());
 
         ra = item->getAs<int>(0);
         rb = item->getAs<char>(1);
         rc = item->getAs<float>(2);
-        rd = item->getAs<char *>(3);
+        rd = item->getAs<const char *>(3);
         printf("a: %d\tb: %d\tc: %f\td: %s\t\n", *ra, *rb, *rc, rd);
         ++it;
     }
@@ -54,7 +53,7 @@ void testInSetFilter() {
 
     ColumnVector *vector = allocateColumn(100, INT_64);
 
-    batchUpdate(vector, 0, test, 50);
+    bulkPut(vector, 0, test, 50);
     printf("%lf\n", *(((double *) (vector->data)) + 49));
 
     std::set<double> s{1.0, 7.0, 34.0, 1.0};
@@ -72,6 +71,8 @@ void testInSetFilter() {
             printf("%lf\t", src[i]);
         };
     }
+
+    freeColumnVector(vector);
 }
 
 void testBinary() {
@@ -79,10 +80,10 @@ void testBinary() {
 
     ColumnVector *vector = allocateColumn(3, BINARY);
     char t[][6] = {"xxxxx", "yyyyy", "zzzz", ""};
-    batchUpdate(vector, 0, t[0], 5);
-    batchUpdate(vector, 1, t[1], 5);
-    batchUpdate(vector, 2, t[2], 4);
-    batchUpdate(vector, 3, t[3], 0);
+    bulkPut(vector, 0, t[0], 5);
+    bulkPut(vector, 1, t[1], 5);
+    bulkPut(vector, 2, t[2], 4);
+    bulkPut(vector, 3, t[3], 0);
     ColumnVector *col = vector->childColumns;
     char d[10] = {0};
     for (i = 0; i < 4; ++i) {
@@ -95,6 +96,7 @@ void testBinary() {
         printf("data: %s\n\n", d);
         memset(d, 0, 10);
     }
+    freeColumnVector(vector);
 }
 
 int main() {

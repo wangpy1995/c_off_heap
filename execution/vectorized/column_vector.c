@@ -15,12 +15,12 @@ static ColumnVector *allocateInt8Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_8;
     vector->capacity = capacity;
-    vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
     vector->lengthData = NULL;
     vector->offsetData = NULL;
     vector->data = malloc(sizeof(char) * capacity);
+    vector->childColumns = NULL;
     return vector;
 }
 
@@ -28,12 +28,12 @@ static ColumnVector *allocateInt16Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_16;
     vector->capacity = capacity;
-    vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
     vector->lengthData = NULL;
     vector->offsetData = NULL;
     vector->data = malloc(sizeof(short) * capacity);
+    vector->childColumns = NULL;
     return vector;
 }
 
@@ -41,12 +41,12 @@ static ColumnVector *allocateInt32Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_32;
     vector->capacity = capacity;
-    vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
     vector->lengthData = NULL;
     vector->offsetData = NULL;
     vector->data = malloc(sizeof(int) * capacity);
+    vector->childColumns = NULL;
     return vector;
 }
 
@@ -54,12 +54,12 @@ static ColumnVector *allocateInt64Column(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = INT_64;
     vector->capacity = capacity;
-    vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
     vector->lengthData = NULL;
     vector->offsetData = NULL;
     vector->data = malloc(sizeof(long) * capacity);
+    vector->childColumns = NULL;
     return vector;
 }
 
@@ -67,12 +67,12 @@ static ColumnVector *allocateFloatColumn(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = FLOAT;
     vector->capacity = capacity;
-    vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
     vector->lengthData = NULL;
     vector->offsetData = NULL;
     vector->data = malloc(sizeof(float) * capacity);
+    vector->childColumns = NULL;
     return vector;
 }
 
@@ -80,12 +80,12 @@ static ColumnVector *allocateDoubleColumn(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = DOUBLE;
     vector->capacity = capacity;
-    vector->childColumns = NULL;
     vector->elementsAppended = 0;
     vector->nulls = malloc(sizeof(char) * ((capacity >> 3) + 1));
     vector->lengthData = NULL;
     vector->offsetData = NULL;
     vector->data = malloc(sizeof(double) * capacity);
+    vector->childColumns = NULL;
     return vector;
 }
 
@@ -93,13 +93,16 @@ static ColumnVector *allocateBinaryColumn(long capacity) {
     ColumnVector *vector = malloc(sizeof(ColumnVector));
     vector->type = BINARY;
     vector->capacity = capacity;
+    vector->elementsAppended = 0;
+    vector->nulls = NULL;
+    vector->lengthData = NULL;
+    vector->offsetData = NULL;
+    vector->data = NULL;
+
     vector->childColumns = allocateInt8Column(capacity * DEFAULT_ARRAY_LENGTH);
     vector->childColumns->lengthData = malloc(sizeof(int) * capacity);
     vector->childColumns->offsetData = malloc(sizeof(int) * capacity);
     vector->childColumns->data = malloc(sizeof(char) * capacity * DEFAULT_ARRAY_LENGTH);
-    vector->elementsAppended = 0;
-    vector->nulls = NULL;
-    vector->data = NULL;
     return vector;
 }
 
@@ -241,14 +244,37 @@ static const BatchUpdateColumn batchUpdateColumn[7] = {
         putInt8s, putInt16s, putInt32s, putInt64s, putFloats, putDoubles, putBinary
 };
 
-ColumnVector *allocateColumn(long capacity, DataType type) {
+inline ColumnVector *allocateColumn(long capacity, DataType type) {
     return columnAllocator[type](capacity);
 }
 
-void updateValue(ColumnVector *vector, long rowId, void *value) {
+inline void put(ColumnVector *vector, long rowId, void *value) {
     updateColumn[vector->type](vector, rowId, value);
 }
 
-void batchUpdate(ColumnVector *vector, long rowId, void *value, int nums) {
+inline void bulkPut(ColumnVector *vector, long rowId, void *value, int nums) {
     batchUpdateColumn[vector->type](vector, rowId, value, nums);
+}
+
+void freeColumnVector(ColumnVector *vector) {
+    if (vector->nulls != NULL) {
+        free(vector->nulls);
+        vector->nulls = NULL;
+    }
+    if (vector->data != NULL) {
+        free(vector->data);
+        vector->data = NULL;
+    }
+    if (vector->offsetData != NULL) {
+        free(vector->offsetData);
+        vector->offsetData = NULL;
+    }
+    if (vector->lengthData != NULL) {
+        free(vector->lengthData);
+        vector->lengthData = NULL;
+    }
+    while (vector->childColumns != NULL) {
+        freeColumnVector(vector->childColumns);
+        vector->childColumns = NULL;
+    }
 }

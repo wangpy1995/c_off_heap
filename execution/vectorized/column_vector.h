@@ -35,9 +35,9 @@ typedef struct _ColumnVector {
 
     int *offsetData;////数组模式使用  记录当前数组值
 
-    struct _ColumnVector *childColumns;////下级列
-
     char *data;////记录当前值  与offsetData冲突
+
+    struct _ColumnVector *childColumns;////下级列
 } ColumnVector;
 
 /**
@@ -54,7 +54,7 @@ ColumnVector *allocateColumn(long capacity, DataType type);
  * @param rowId
  * @param value
  */
-void updateValue(ColumnVector *vector, long rowId, void *value);
+void put(ColumnVector *vector, long rowId, void *value);
 
 /**
  * 更新多个值  Binary被当作一组Byte
@@ -63,7 +63,10 @@ void updateValue(ColumnVector *vector, long rowId, void *value);
  * @param value
  * @param nums
  */
-void batchUpdate(ColumnVector *vector, long rowId, void *value, int nums);
+void bulkPut(ColumnVector *vector, long rowId, void *value, int nums);
+
+
+void freeColumnVector(ColumnVector *vector);
 #ifdef __cplusplus
 }
 #endif
