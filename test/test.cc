@@ -34,10 +34,10 @@ void testRow() {
     while (it != vector.end()) {
         const auto &item = *(it.base());
 
-        ra = item->getAs<int>(0);
-        rb = item->getAs<char>(1);
-        rc = item->getAs<float>(2);
-        rd = item->getAs<const char *>(3);
+        ra = item->GetAs<int>(0);
+        rb = item->GetAs<char>(1);
+        rc = item->GetAs<float>(2);
+        rd = item->GetAs<const char *>(3);
         printf("a: %d\tb: %d\tc: %f\td: %s\t\n", *ra, *rb, *rc, rd);
         ++it;
     }
@@ -99,6 +99,7 @@ void testBinary() {
     freeColumnVector(vector);
 }
 
+/*
 int main() {
     testRow();
 
@@ -106,4 +107,4 @@ int main() {
 
     testInSetFilter();
 
-}
+}*/

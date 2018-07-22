@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS_DEBUG "-mavx2 -Wall -D__AVX2__ -D__AVX__")
 #set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -mavx2 -D__AVX2__ -D__AVX__")
 
-set(CMAKE_CXX_FLAGS "-mavx2 -Wall -D__AVX2__ -D__AVX__")
+set(CMAKE_CXX_FLAGS "-mavx2 -Wall -D__AVX2__ -D__AVX__ -pthread -fstack-protector-all")
 
 #set(CMAKE_C_FLAGS_DEBUG "-mavx2 -D__AVX2__ -D__AVX__")
 #set(CMAKE_C_FLAGS_RELEASE "-O3 -mavx2 -D__AVX2__ -D__AVX__")

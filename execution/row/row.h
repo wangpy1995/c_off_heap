@@ -24,32 +24,32 @@ typedef struct _OBJECT {
 class Row {
 public:
     template<typename T>
-    explicit Row(T &seq, int size) : columns(seq), size(size) {}
+    explicit Row(T &seq, int size) : columns_(seq), size_(size) {}
 
     template<typename T>
-    explicit Row(T &seq) : columns(seq), size(sizeof(seq) / sizeof(seq[0])) {}
+    explicit Row(T &seq) : columns_(seq), size_(sizeof(seq) / sizeof(seq[0])) {}
 
     virtual ~Row() = default;
 
     template<typename data_type>
-    inline data_type *getAs(const int idx) const {
-        if (idx >= size) return nullptr;
-        return (data_type *) (this->columns[idx].ptr);
+    inline data_type *GetAs(const int idx) const {
+        if (idx >= size_) return nullptr;
+        return (data_type *) (this->columns_[idx].ptr);
     }
 
     template<typename data_type>
-    inline void put(const int idx, const data_type &value) {
-        if (idx >= size)return;
-        this->columns[idx].ptr = &value;
+    inline void Put(const int idx, const data_type &value) {
+        if (idx >= size_)return;
+        this->columns_[idx].ptr = &value;
     }
 
 protected:
-    explicit Row() : columns(nullptr), size(0) {}
+    explicit Row() : columns_(nullptr), size_(0) {}
 
     Row(const Row &r) = default;
 
-    Object *columns;
-    int size;
+    Object *columns_;
+    int size_;
 private:
     Row &operator=(const Row &that) { return *this; };
 };
