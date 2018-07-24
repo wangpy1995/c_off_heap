@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "-mavx2 -Wall -D__AVX2__ -D__AVX__ -pthread -fstack-protecto
 #set(CMAKE_C_FLAGS_RELEASE "-O3 -mavx2 -D__AVX2__ -D__AVX__")
 
 include_directories(
+        ${PROJECT_SOURCE_DIR}/third_party
         ${PROJECT_SOURCE_DIR}/execution
         ${PROJECT_SOURCE_DIR}/execution/vectorized
         ${PROJECT_SOURCE_DIR}/execution/filter
